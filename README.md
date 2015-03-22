@@ -3,7 +3,7 @@ Gmls
 
 GitHub Markdown Local Server.
 
-I use it to read great wikis on github offline.
+I read great markdown wikis on github offline with it :).
 
 Install
 -------
