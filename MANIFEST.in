@@ -1,0 +1,9 @@
+include LICENSE-MIT README.md
+recursive-include gmls/static *.css
+recursive-include gmls/templates *.html
+recursive-exclude venv *
+recursive-exclude dist *
+recursive-exclude build *
+recursive-exclude gmls .*.swp
+recursive-exclude gmls .*.swo
+recursive-exclude gmls.egg-info *
