@@ -15,6 +15,7 @@ __version__ = '0.0.1'
 
 import os
 import mimetypes
+import subprocess
 from binaryornot.check import is_binary
 from docopt import docopt
 from flask import abort
@@ -46,6 +47,12 @@ class GmlsHtmlRenderer(HtmlRenderer, SmartyPants):
     def _code_no_lexer(self, text):
         text = text.encode('utf8')
         return '<pre><code>{}</code></pre>'.format(escape_html(text))
+
+    def header(self, text, level):
+        text = text.encode('utf8')
+        return '''<h{0}><a id="{1}" class="anchor" href="#{1}">
+               <span class="octicon octicon-link"></span></a>
+               {1}</h{0}>'''.format(level, text)
 
     def block_code(self, text, lang):
         if not lang:
@@ -90,6 +97,9 @@ def handler(path):
     except IOError:
         return abort(404)
     html = markdown.render(content)
+    dir_ = os.path.dirname(path) or '.'
+    files = subprocess.check_output('git ls-files {}'.format(dir_), shell=True)
+    print files
     return render_template('layout.html', path=path, html=html)
 
 

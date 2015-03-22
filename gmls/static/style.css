@@ -1,6 +1,9 @@
-.markdown-body {
+article.markdown-body {
   min-width: 200px;
   max-width: 790px;
   margin: 0 auto;
   padding: 30px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  word-wrap: break-word;
 }
