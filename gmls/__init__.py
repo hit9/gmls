@@ -68,7 +68,7 @@ markdown = Markdown(render, extensions=(
     EXT_AUTOLINK))
 
 
-@app.route('/', defaults={'path': ''})
+@app.route('/', defaults={'path': '.'})
 @app.route('/<path:path>')
 def handler(path):
     if os.path.isdir(path):
@@ -76,6 +76,9 @@ def handler(path):
         return redirect(url_for('handler', path=path))
 
     if not path.endswith(('.md', '.markdown', '.mkd')):
+        if not os.path.isfile(path):
+            return abort(404)
+
         if not is_binary(path):
             mimetype = 'text/plain'
         else:
