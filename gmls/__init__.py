@@ -15,7 +15,6 @@ __version__ = '0.0.1'
 
 import os
 import mimetypes
-import subprocess
 from binaryornot.check import is_binary
 from docopt import docopt
 from flask import abort
@@ -97,9 +96,6 @@ def handler(path):
     except IOError:
         return abort(404)
     html = markdown.render(content)
-    dir_ = os.path.dirname(path) or '.'
-    files = subprocess.check_output('git ls-files {}'.format(dir_), shell=True)
-    print files
     return render_template('layout.html', path=path, html=html)
 
 
