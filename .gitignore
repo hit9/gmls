@@ -4,3 +4,4 @@ test
 dist
 build
 *.egg-info
+*.pyc
