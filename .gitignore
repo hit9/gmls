@@ -1,3 +1,5 @@
 .*.sw[opn]
 venv
 test
+dist
+*.egg-info
