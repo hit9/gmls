@@ -11,7 +11,7 @@ Options:
   -v --version      show version
 """
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 import os
 import mimetypes
@@ -74,29 +74,40 @@ markdown = Markdown(render, extensions=(
     EXT_AUTOLINK))
 
 
-@app.route('/', defaults={'path': '.'})
+@app.route('/', defaults={'path': './'})  # noqa
 @app.route('/<path:path>')
-def handler(path):
+def handle(path):
     if os.path.isdir(path):
-        path = os.path.join(path, 'README.md')
-        return redirect(url_for('handler', path=path))
+        if not path.endswith('/'):
+            return redirect(url_for('handle', path=path + '/'))
 
-    if not path.endswith(('.md', '.markdown', '.mkd')):
-        if not os.path.isfile(path):
+        lilist = []
+        for entry in os.listdir(path):
+            if not entry.startswith('.'):
+                path_ = os.path.join(path, entry)
+                if os.path.isdir(path_):
+                    entry += '/'
+                li = '* [{0}]({0})'.format(entry)
+                lilist.append(li)
+        content = '\n'.join(lilist)
+    else:
+        if not path.endswith(('.md', '.markdown', '.mkd')):
+            if not os.path.isfile(path):
+                return abort(404)
+
+            if not is_binary(path):
+                mimetype = 'text/plain'
+            else:
+                mimetype = mimetypes.guess_type(path)[0]
+            return send_from_directory(cwd, path, mimetype=mimetype)
+
+        try:
+            content = open(path).read().decode('utf8')
+        except IOError:
             return abort(404)
-
-        if not is_binary(path):
-            mimetype = 'text/plain'
-        else:
-            mimetype = mimetypes.guess_type(path)[0]
-        return send_from_directory(cwd, path, mimetype=mimetype)
-
-    try:
-        content = open(path).read().decode('utf8')
-    except IOError:
-        return abort(404)
     html = markdown.render(content)
-    return render_template('layout.html', path=path, html=html)
+    return render_template('layout.html', path=path, html=html,
+                           os=os, cwd=cwd)
 
 
 def main():

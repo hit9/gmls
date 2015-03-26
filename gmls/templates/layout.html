@@ -5,13 +5,26 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='markdown.css') }}" type="text/css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='code.css') }}" type="text/css" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" type="text/css" />
-  <title>{{ path }}</title>
+  <title>{{ os.path.normpath(os.path.join(os.path.basename(cwd), path)) }}</title>
 </head>
 <body>
   <article class="markdown-body">
-  {% autoescape false %}
-  {{ html }}
-  {% endautoescape %}
+    <nav> ☞  
+      <a href="{{ url_for('handle') }}">{{ os.path.basename(cwd) }}/</a>
+      {% set entrys = os.path.normpath(os.path.join('/', path)).split('/') %}
+      {% set path_ = '/' %}
+      {% for entry in entrys %}
+        {% if entry %}
+        {% set path_ = os.path.join(path_, entry) %}
+        <a href="{{ url_for('handle', path=path_) }}">
+          {{ entry }}{% if loop.index < loop.length %}/{% endif %}
+        </a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    {% autoescape false %}
+    {{ html }}
+    {% endautoescape %}
   </article>
 </body>
 </html>
