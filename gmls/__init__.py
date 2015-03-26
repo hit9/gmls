@@ -78,9 +78,11 @@ markdown = Markdown(render, extensions=(
 @app.route('/<path:path>')
 def handle(path):
     if os.path.isdir(path):
+        # 'directory' => 'directory/'
         if not path.endswith('/'):
             return redirect(url_for('handle', path=path + '/'))
 
+        # collect entries in this directory
         lilist = []
         for entry in os.listdir(path):
             if not entry.startswith('.'):
@@ -91,16 +93,20 @@ def handle(path):
                 lilist.append(li)
         content = '\n'.join(lilist)
     else:
+        # handle file
         if not path.endswith(('.md', '.markdown', '.mkd')):
+            # not found
             if not os.path.isfile(path):
                 return abort(404)
 
+            # binary/plain text non-md files
             if not is_binary(path):
                 mimetype = 'text/plain'
             else:
                 mimetype = mimetypes.guess_type(path)[0]
             return send_from_directory(cwd, path, mimetype=mimetype)
 
+        # handle markdown files
         try:
             content = open(path).read().decode('utf8')
         except IOError:
