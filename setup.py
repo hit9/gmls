@@ -23,7 +23,7 @@ from setuptools import setup
 
 setup(
     name='gmls',
-    version='0.0.2',
+    version='0.0.3',
     author_email='hit9@icloud.com',
     description='GitHub Markdown Local Server.',
     license='MIT',

@@ -11,7 +11,7 @@ Options:
   -v --version      show version
 """
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 import os
 import mimetypes
@@ -89,7 +89,7 @@ def handle(path):
                 path_ = os.path.join(path, entry)
                 if os.path.isdir(path_):
                     entry += '/'
-                li = '* [{0}]({0})'.format(entry)
+                li = u'* [{0}]({0})'.format(entry)
                 lilist.append(li)
         content = '\n'.join(lilist)
     else:
