@@ -9,7 +9,7 @@
 </head>
 <body>
   <article class="markdown-body">
-    <nav> ☞  
+    <nav> ☞
       <a href="{{ url_for('handle') }}">{{ os.path.basename(cwd) }}/</a>
       {% set entrys = os.path.normpath(os.path.join('/', path)).split('/') %}
       {% set path_ = '/' %}
