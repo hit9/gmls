@@ -53,9 +53,14 @@ ignores = ["gmls.htmls*", ".git*", "*.pyc", "*.sw[opn]"]
 
 def try_md2html(name):
     suffixes = ['.md', '.mkd', '.markdown']
+    main = name
+    tail = ''
+    if '#' in name:
+        main = name[:name.find('#')]
+        tail = name[name.find('#'):]
     for suffix in suffixes:
-        if name.endswith(suffix):
-            return name[:-len(suffix)] + '.html'
+        if main.endswith(suffix):
+            return main[:-len(suffix)] + '.html' + tail
     return name
 
 
