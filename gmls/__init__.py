@@ -48,7 +48,7 @@ app.config['FREEZER_DESTINATION'] = os.path.join(cwd, 'gmls.htmls')
 app.config['FREEZER_RELATIVE_URLS'] = True
 app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS'] = True
 freezer = Freezer(app)
-freezer_ignores = ["gmls.htmls*", ".git*", "*.pyc", "*.sw[opn]"]
+ignores = ["gmls.htmls*", ".git*", "*.pyc", "*.sw[opn]"]
 
 
 def try_md2html(name):
@@ -72,6 +72,13 @@ def find_md_by_html(name):
         elif os.path.exists(markdownfile):
             return markdownfile
     return name
+
+
+def match_ignores(name):
+    for pattern in ignores:
+        if fnmatch.fnmatch(name, pattern):
+            return True
+    return False
 
 
 class GmlsHtmlRenderer(HtmlRenderer, SmartyPants):
@@ -132,7 +139,7 @@ def handle(path):
         lilist = []
         readme = None
         for entry in os.listdir(path):
-            if not entry.startswith('.'):
+            if not entry.startswith('.') and not match_ignores(entry):
                 path_ = os.path.join(path, entry)
                 if os.path.isdir(path_):
                     entry += '/'
@@ -176,11 +183,7 @@ def handle(path):
 @freezer.register_generator
 def handle_url_generator():
     for path in walk_directory(cwd):
-        matched = False
-        for pattern in freezer_ignores:
-            if fnmatch.fnmatch(path, pattern):
-                matched = True
-        if not matched:
+        if not match_ignores(path):
             path = try_md2html(path)
             print path
             yield 'handle', {'path': path}
@@ -189,12 +192,12 @@ def handle_url_generator():
 def main():
     args = docopt(__doc__, version=__version__)
 
+    if args['-i']:
+        for pattern in args['-i'].split(','):
+            pattern = pattern.strip()
+            if pattern:
+                ignores.append(pattern)
     if args['--freeze']:
-        if args['-i']:
-            for pattern in args['-i'].split(','):
-                pattern = pattern.strip()
-                if pattern:
-                    freezer_ignores.append(pattern)
         freezer.freeze()
     else:
         if not args['-p'].isdigit():
