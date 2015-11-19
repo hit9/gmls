@@ -3,10 +3,11 @@
 """GitHub Markdown Local Server.
 
 Usage:
-  gmls [-p PORT|-f|-h|-v]
+  gmls [-p PORT|-f||-h|-v] [-i PATTERNS]
 
 Options:
   -p PORT           server port [default: 5000]
+  -i PATTERNS       ignore patterns for freezer
   -f --freeze       freeze site to static htmls
   -h --help         show this message
   -v --version      show version
@@ -16,6 +17,7 @@ __version__ = '0.0.3'
 
 import os
 import mimetypes
+import fnmatch
 from binaryornot.check import is_binary
 from docopt import docopt
 from flask import abort
@@ -43,10 +45,10 @@ dir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, static_folder=os.path.join(dir, 'static'),
             template_folder=os.path.join(dir, 'templates'))
 app.config['FREEZER_DESTINATION'] = os.path.join(cwd, 'gmls.htmls')
-app.config['FREEZER_DESTINATION_IGNORE'] = ['gmls.htmls', '.git*']
 app.config['FREEZER_RELATIVE_URLS'] = True
 app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS'] = True
 freezer = Freezer(app)
+freezer_ignores = ["gmls.htmls*", ".git*", "*.pyc", "*.sw[opn]"]
 
 
 class GmlsHtmlRenderer(HtmlRenderer, SmartyPants):
@@ -126,15 +128,26 @@ def handle(path):
 @freezer.register_generator
 def handle_url_generator():
     for path in walk_directory(cwd):
-        print path
-        yield 'handle', {'path': path}
+        matched = False
+        for pattern in freezer_ignores:
+            if fnmatch.fnmatch(path, pattern):
+                matched = True
+        if not matched:
+            print path
+            yield 'handle', {'path': path}
 
 
 def main():
     args = docopt(__doc__, version=__version__)
 
     if args['--freeze']:
-        freezer.freeze()
+        print args
+        if args['-i']:
+            for pattern in args['-i'].split(','):
+                pattern = pattern.strip()
+                if pattern:
+                    freezer_ignores.append(pattern)
+            freezer.freeze()
     else:
         if not args['-p'].isdigit():
             exit(__doc__)
