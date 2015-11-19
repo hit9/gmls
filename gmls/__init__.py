@@ -51,6 +51,14 @@ freezer = Freezer(app)
 freezer_ignores = ["gmls.htmls*", ".git*", "*.pyc", "*.sw[opn]"]
 
 
+def try_md2html(name):
+    suffixes = ['.md', '.mkd', '.markdown']
+    for suffix in suffixes:
+        if name.endswith(suffix):
+            return name[:-len(suffix)] + '.html'
+    return name
+
+
 class GmlsHtmlRenderer(HtmlRenderer, SmartyPants):
     def _code_no_lexer(self, text):
         text = text.encode('utf8')
@@ -75,6 +83,20 @@ class GmlsHtmlRenderer(HtmlRenderer, SmartyPants):
 
         return highlight(text, lexer, formatter)
 
+    def autolink(self, link, is_email):
+        if is_email:
+            return u'<a href="mailto:{0}">{0}</a>'.format(link)
+        if not link.startswith(('http', 'https', '//')):
+            link = try_md2html(link)
+        return u'<a href="{0}">{0}</a>'.format(link)
+
+    def link(self, link, title, content):
+        if not link.startswith(('http', 'https', '//')):
+            link = try_md2html(link)
+        if title:
+            return u'<a href="{0}">{1}</a>'.format(link, content)
+        return u'<a href="{0}" title="{2}">{1}</a>'.format(link, content, title)
+
 
 render = GmlsHtmlRenderer()
 markdown = Markdown(render, extensions=(
@@ -98,16 +120,27 @@ def handle(path):
                 path_ = os.path.join(path, entry)
                 if os.path.isdir(path_):
                     entry += '/'
-                li = u'* [{0}]({0})'.format(entry)
+                link = try_md2html(entry)
+                li = u'* [{0}]({1})'.format(entry, link)
                 lilist.append(li)
         content = '\n'.join(lilist)
     else:
         # handle file
-        if not path.endswith(('.md', '.markdown', '.mkd')):
-            # not found
-            if not os.path.isfile(path):
-                return abort(404)
-
+        if path.endswith('.html'):
+            fname = path[:-len('.html')]
+            mdfile = fname + '.md'
+            mkdfile = fname + '.mkd'
+            markdownfile = fname + '.markdown'
+            if os.path.exists(mdfile):
+                path = mdfile
+            elif os.path.exists(mkdfile):
+                path = mkdfile
+            elif os.path.exists(markdownfile):
+                path = markdownfile
+        elif path.endswith(('.md', '.mkd', '.markdown')):
+            path = '.'.join(path.split('.')[:-1]) + '.html'
+            return redirect(url_for('handle', path=path))
+        else:
             # binary/plain text non-md files
             if not is_binary(path):
                 mimetype = 'text/plain'
@@ -115,6 +148,9 @@ def handle(path):
                 mimetype = mimetypes.guess_type(path)[0]
             return send_from_directory(cwd, path, mimetype=mimetype)
 
+        # not found
+        if not os.path.isfile(path):
+            return abort(404)
         # handle markdown files
         try:
             content = open(path).read().decode('utf8')
@@ -133,6 +169,7 @@ def handle_url_generator():
             if fnmatch.fnmatch(path, pattern):
                 matched = True
         if not matched:
+            path = try_md2html(path)
             print path
             yield 'handle', {'path': path}
 
@@ -141,13 +178,12 @@ def main():
     args = docopt(__doc__, version=__version__)
 
     if args['--freeze']:
-        print args
         if args['-i']:
             for pattern in args['-i'].split(','):
                 pattern = pattern.strip()
                 if pattern:
                     freezer_ignores.append(pattern)
-            freezer.freeze()
+        freezer.freeze()
     else:
         if not args['-p'].isdigit():
             exit(__doc__)
