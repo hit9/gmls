@@ -3,10 +3,11 @@
 """GitHub Markdown Local Server.
 
 Usage:
-  gmls [-p PORT|-h|-v]
+  gmls [-p PORT|-f|-h|-v]
 
 Options:
   -p PORT           server port [default: 5000]
+  -f --freeze       freeze site to static htmls
   -h --help         show this message
   -v --version      show version
 """
@@ -23,6 +24,7 @@ from flask import redirect
 from flask import render_template
 from flask import send_from_directory
 from flask import url_for
+from .flask_frozen import Freezer, walk_directory
 from houdini import escape_html
 from misaka import HtmlRenderer
 from misaka import Markdown
@@ -40,6 +42,11 @@ cwd = os.getcwd()
 dir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, static_folder=os.path.join(dir, 'static'),
             template_folder=os.path.join(dir, 'templates'))
+app.config['FREEZER_DESTINATION'] = os.path.join(cwd, 'gmls.htmls')
+app.config['FREEZER_DESTINATION_IGNORE'] = ['gmls.htmls', '.git*']
+app.config['FREEZER_RELATIVE_URLS'] = True
+app.config['FREEZER_IGNORE_MIMETYPE_WARNINGS'] = True
+freezer = Freezer(app)
 
 
 class GmlsHtmlRenderer(HtmlRenderer, SmartyPants):
@@ -116,14 +123,23 @@ def handle(path):
                            os=os, cwd=cwd)
 
 
+@freezer.register_generator
+def handle_url_generator():
+    for path in walk_directory(cwd):
+        print path
+        yield 'handle', {'path': path}
+
+
 def main():
     args = docopt(__doc__, version=__version__)
 
-    if not args['-p'].isdigit():
-        exit(__doc__)
-
-    port = int(args['-p'])
-    app.run(port=port, debug=True)
+    if args['--freeze']:
+        freezer.freeze()
+    else:
+        if not args['-p'].isdigit():
+            exit(__doc__)
+        port = int(args['-p'])
+        app.run(port=port, debug=True)
 
 
 if __name__ == '__main__':
