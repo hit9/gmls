@@ -39,7 +39,7 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 
-
+DEFAULT_INDEX = "README.html"
 cwd = os.getcwd()
 dir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, static_folder=os.path.join(dir, 'static'),
@@ -56,6 +56,21 @@ def try_md2html(name):
     for suffix in suffixes:
         if name.endswith(suffix):
             return name[:-len(suffix)] + '.html'
+    return name
+
+
+def find_md_by_html(name):
+    if name.endswith('.html'):
+        fname = name[:-len('.html')]
+        mdfile = fname + '.md'
+        mkdfile = fname + '.mkd'
+        markdownfile = fname + '.markdown'
+        if os.path.exists(mdfile):
+            return mdfile
+        elif os.path.exists(mkdfile):
+            return mkdfile
+        elif os.path.exists(markdownfile):
+            return markdownfile
     return name
 
 
@@ -115,30 +130,27 @@ def handle(path):
 
         # collect entries in this directory
         lilist = []
+        readme = None
         for entry in os.listdir(path):
             if not entry.startswith('.'):
                 path_ = os.path.join(path, entry)
                 if os.path.isdir(path_):
                     entry += '/'
                 link = try_md2html(entry)
+                if link == DEFAULT_INDEX:
+                    readme = open(os.path.join(path, entry))\
+                        .read().decode('utf8')
                 li = u'* [{0}]({1})'.format(entry, link)
                 lilist.append(li)
         content = '\n'.join(lilist)
+        if readme:
+            content = u'{0}\n\n-----\n\n{1}'.format(content, readme)
     else:
         # handle file
         if path.endswith('.html'):
-            fname = path[:-len('.html')]
-            mdfile = fname + '.md'
-            mkdfile = fname + '.mkd'
-            markdownfile = fname + '.markdown'
-            if os.path.exists(mdfile):
-                path = mdfile
-            elif os.path.exists(mkdfile):
-                path = mkdfile
-            elif os.path.exists(markdownfile):
-                path = markdownfile
+            path = find_md_by_html(path)
         elif path.endswith(('.md', '.mkd', '.markdown')):
-            path = '.'.join(path.split('.')[:-1]) + '.html'
+            path = try_md2html(path)
             return redirect(url_for('handle', path=path))
         else:
             # binary/plain text non-md files
