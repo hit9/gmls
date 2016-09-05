@@ -31,6 +31,7 @@ from houdini import escape_html
 from misaka import HtmlRenderer
 from misaka import Markdown
 from misaka import SmartyPants
+from misaka import EXT_TABLES
 from misaka import EXT_FENCED_CODE
 from misaka import EXT_NO_INTRA_EMPHASIS
 from misaka import EXT_AUTOLINK
@@ -127,6 +128,7 @@ class GmlsHtmlRenderer(HtmlRenderer, SmartyPants):
 
 render = GmlsHtmlRenderer()
 markdown = Markdown(render, extensions=(
+    EXT_TABLES |
     EXT_FENCED_CODE |
     EXT_NO_INTRA_EMPHASIS |
     EXT_AUTOLINK))
