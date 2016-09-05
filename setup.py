@@ -19,11 +19,20 @@ Source
 
 """
 
+import re
+import ast
 from setuptools import setup
+
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('gmls/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')
+    ).group(1)))
 
 setup(
     name='gmls',
-    version='0.1.0',
+    version=version,
     author_email='hit9@icloud.com',
     description='GitHub Markdown Local Server.',
     license='MIT',

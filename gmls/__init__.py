@@ -13,7 +13,7 @@ Options:
   -v --version      show version
 """
 
-__version__ = '0.0.3'
+__version__ = '0.1.1'
 
 import os
 import mimetypes
