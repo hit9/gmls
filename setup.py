@@ -50,7 +50,8 @@ setup(
         'Flask==0.10.1',
         'houdini.py==0.1.0',
         'misaka==1.0.2',
-        'pygments==2.0.2'
+        'pygments==2.0.2',
+        "Jinja2==2.4"
     ],
     long_description=__doc__,
     classifiers=[
