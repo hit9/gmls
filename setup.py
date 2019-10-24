@@ -47,7 +47,7 @@ setup(
     install_requires=[
         'binaryornot==0.3.0',
         'docopt==0.6.2',
-        'Flask==0.10.1',
+        'Flask==1.0',
         'houdini.py==0.1.0',
         'misaka==1.0.2',
         'pygments==2.0.2',
